@@ -78,6 +78,7 @@ class KalahaGame(easyAI.TwoPlayersGame):
     def possible_moves(self):
         return self.possible_moves_choices()
 
+    # A list of legal moves
     def possible_moves_choices(self):
         possible = []
         for house in HOUSE_LIST[self.nplayer]:
