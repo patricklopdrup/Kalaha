@@ -34,6 +34,7 @@ DIST = 4
 HOUSE = 88
 STORE = 99
 
+# Dictionary for easy lookup
 P = {
     1: {OWNER: USER, NEXT: {USER:  2, AI:  2}, ROLE: HOUSE, OPP: 13, DIST: 6},
     2: {OWNER: USER, NEXT: {USER:  3, AI:  3}, ROLE: HOUSE, OPP: 12, DIST: 5},
