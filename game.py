@@ -73,7 +73,7 @@ class KalahaGame(easyAI.TwoPlayersGame):
         self.players = players
         self.nplayer = 1
         self.board = [0]*15
-        self.seeds_per_house = 4
+        self.seeds_per_house = 1
         self.reset_board()
 
     def possible_moves(self):
@@ -129,9 +129,9 @@ class KalahaGame(easyAI.TwoPlayersGame):
 
     def show(self):
         print(f"Player: {self.nplayer}")
-        print(f"Hand: {self.board[HAND]}")
         print("Board:\n")
         print("      13  12  11  10  09  08      AI")
+        print("      ̅ ̅ ̅ ̅ ̅ ̅ ̅ ̅ ̅ ̅ ̅ ̅ ̅ ̅ ̅ ̅ ̅ ̅ ̅ ̅ ̅ ̅ ")
         print("      "+"  ".join(
             ["{:02d}".format(self.board[pit])
              for pit in reversed(HOUSE_LIST[AI])]
@@ -142,6 +142,7 @@ class KalahaGame(easyAI.TwoPlayersGame):
         print("      "+"  ".join(
             ["{:02d}".format(self.board[pit]) for pit in HOUSE_LIST[USER]]
         ))
+        print("      ______________________")
         print("      01  02  03  04  05  06      USER")
 
     def reset_board(self):
@@ -171,6 +172,15 @@ class KalahaGame(easyAI.TwoPlayersGame):
         return move
 
 
+def winner():
+    if game.board[STORE_IDX[USER]] > game.board[STORE_IDX[AI]]:
+        return "You win!"
+    elif game.board[STORE_IDX[USER]] == game.board[STORE_IDX[AI]]:
+        return "It's a draw!"
+    else:
+        return "You lose!"
+
+
 if __name__ == "__main__":
     human = KalahaHumanPlayer()
     other_human = KalahaHumanPlayer()
@@ -184,3 +194,7 @@ if __name__ == "__main__":
             move = game.ai_move()
             print(f"\nAI moves: {move}\n")
         game.play_move(move)
+    # when game is over
+    game.show()
+
+    print(winner())
