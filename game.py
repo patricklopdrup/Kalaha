@@ -1,5 +1,5 @@
 import easyAI
-from copy import *
+import copy
 
 USER = 1
 AI = 2
@@ -74,9 +74,11 @@ class KalahaGame(easyAI.TwoPlayersGame):
         self.players = players
         self.nplayer = 1
         self.board = [0]*15
-        self.old_board = self.board
+        
         self.seeds_per_house = 4
         self.reset_board()
+        self.old_board = copy.deepcopy(self.board)
+        self.board_copy = copy.deepcopy(self.board)
 
     def possible_moves(self):
         return self.possible_moves_choices()
@@ -90,7 +92,7 @@ class KalahaGame(easyAI.TwoPlayersGame):
         return possible
 
     def make_move(self, house):
-        self.old_board = self.board
+        #self.old_board = self.board
         # scoop up from chosen house
         self._scoop(house)
         cur_house = house
@@ -117,12 +119,9 @@ class KalahaGame(easyAI.TwoPlayersGame):
                     self._drop_all(STORE_IDX[player])
         # extra turn if last stone lands in your store
         # if the player does not get extra turn we save the board so we can undo moves
-        if P[cur_house][OWNER] != self.player:
-            print("her")
-            #self.old_board = self.board
-        else:
-            if P[cur_house][ROLE] == STORE:
-                self.switch_player()
+        #if P[cur_house][OWNER] == self.player:
+            #if P[cur_house][ROLE] == STORE:
+                #self.switch_player()
 
     def is_over(self):
         for player in PLAYER_LIST:
@@ -159,11 +158,20 @@ class KalahaGame(easyAI.TwoPlayersGame):
                 self.board[house] = self.seeds_per_house
 
     def undo_move(self):
-        print(f"board før")
-        print(self.board)
-        self.board = self.old_board
-        print(f"board efter")
-        print(self.board)
+        #print(f"board før")
+        #print(self.board)
+        self.board = copy.deepcopy(self.old_board)
+        #print(f"board efter")
+        #print(self.board)
+
+    def save_board(self):
+        self.old_board = copy.deepcopy(self.board)
+
+    def copy_board(self):
+        self.board_copy = copy.deepcopy(self.board)
+
+    def paste_board(self):
+        self.board = copy.deepcopy(self.board_copy)
 
     def _scoop(self, pit):
         self.board[HAND] += self.board[pit]
@@ -185,48 +193,81 @@ class KalahaGame(easyAI.TwoPlayersGame):
                 move = house
         return move
 
+    def count_total_seeds(self):
+        count = 0
+        for seed in ALL_PITS:
+            count += self.board[seed]
+        return count
+
     def eval(self, board):
-        # AI wins return 100
+        score = -10_000
+        # AI wins return 10.000
         if game.board[STORE_IDX[AI]] > game.board[STORE_IDX[USER]]:
-            return 100
-        elif game.board[STORE_IDX[USER]] == game.board[STORE_IDX[AI]]:
-            return 50
-        else:
-            return 0
+            score += 10_000
+            score += game.board[STORE_IDX[AI]] - game.board[STORE_IDX[USER]]
+        # draw
+        #if game.board[STORE_IDX[USER]] == game.board[STORE_IDX[AI]]:
+            #score += 50
+        # user wins
+        if game.board[STORE_IDX[AI]] < game.board[STORE_IDX[USER]]:
+            score -= 1000
+            score -= game.board[STORE_IDX[USER]] - game.board[STORE_IDX[AI]]
+        # if steal is possible
+        for house in HOUSE_LIST[AI]:
+            if board[house] >= 1:
+                score += board[P[house][OPP]] * 1000
+        # don't let the user steal from AI
+        for house in HOUSE_LIST[USER]:
+            if board[house] <= 1:
+                score += (board[P[house][OPP]] * 1000)
+                
+        return score
 
     count = 0
 
     def alpha_beta_search(self, ply):
+        self.count = 0
         m_move = -1
         alpha = -float('inf')
         beta = float('inf')
         best_score = -float('inf')
-        #m_board = board
-        #old_m_board = board
+
+        self.copy_board()
 
         legal_moves = self.possible_moves()
+        print(f"moves: {legal_moves}")
         for move in legal_moves:
+            print(f"igang med move {move}")
             if ply == 0:
+                print("her")
                 return self.eval(self.board)
 
+            self.copy_board()
+            self.save_board()
             self.make_move(move)
             self.switch_player()
             s = self.min_value(ply-1, alpha, beta)
             self.undo_move()
-            print(f"main s: {s}")
-            print(f"move: {move}")
+            self.paste_board()
+            
+            print(f"s= {s} for {move}")
             if s > best_score:
                 m_move = move
                 best_score = s
+                print(f"bestscore {best_score} at move {m_move}")
 
             alpha = max(best_score, alpha)
-        print(f"best move {m_move}")
+        self.paste_board()
+        self.nplayer = AI
+        print(f"best move {m_move} med {best_score}")
+        print(f"total seeds {self.count_total_seeds()}")
         print(f"count: {self.count}")
         return m_move
 
     def max_value(self, ply, alpha, beta):
         self.count += 1
         if self.is_over():
+            print("return over max")
             return self.eval(self.board)
 
         score = -float('inf')
@@ -234,14 +275,16 @@ class KalahaGame(easyAI.TwoPlayersGame):
         legal_moves = self.possible_moves()
         for m in legal_moves:
             if ply == 0:
+                print("return fra ply max")
                 return self.eval(self.board)
 
+            self.save_board()
             self.switch_player()
+            
             self.make_move(m)
             score = max(score, self.min_value(ply-1, alpha, beta))
             self.undo_move()
 
-            print(f"max s: {score}")
             if score >= beta:
                 return score
 
@@ -252,19 +295,22 @@ class KalahaGame(easyAI.TwoPlayersGame):
     def min_value(self, ply, alpha, beta):
         self.count += 1
         if self.is_over():
+            print("return over max")
             return self.eval(self.board)
 
         score = float('inf')
         legal_moves = self.possible_moves()
         for m in legal_moves:
+            #print(f"min move {m} af {legal_moves}")
             if ply == 0:
+                print("return fra ply min")
                 return self.eval(self.board)
 
+            self.save_board()
             self.switch_player()
             self.make_move(m)
             score = min(score, self.max_value(ply-1, alpha, beta))
             self.undo_move()
-            print(f"min s: {score}")
 
             if score <= alpha:
                 return score
@@ -272,13 +318,6 @@ class KalahaGame(easyAI.TwoPlayersGame):
             beta = min(beta, score)
 
         return score
-
-
-class Player:
-    def __init__(self, player_num, ply=0):
-        self.num = player_num
-        self.opp = 2 - player_num + 1
-        self.ply = ply
 
 
 def winner():
@@ -297,12 +336,16 @@ if __name__ == "__main__":
     #game = KalahaGame([human, other_human])
     game = KalahaGame([human, m_ai])
 
-    SEARCH_DEPTH = 5
-
+    SEARCH_DEPTH = 50
+    round = 0
     while not game.is_over():
+        round += 1
         game.show()
+        print(f"round: {round}")
         if game.nplayer == USER:
             move = int(input("Enter move:"))
+            while move not in HOUSE_LIST[USER]:
+                move = int(input("Enter legal move:"))
         else:
             #move = game.ai_move()
             move = game.alpha_beta_search(SEARCH_DEPTH)
