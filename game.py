@@ -208,22 +208,22 @@ class KalahaGame(easyAI.TwoPlayersGame):
         return count
 
     def eval(self, board):
-        score = -10_000
+        score = 0
         # AI wins
-        if game.board[STORE_IDX[AI]] > game.board[STORE_IDX[USER]]:
+        if board[STORE_IDX[AI]] > board[STORE_IDX[USER]]:
             score += 10_000
-            score += game.board[STORE_IDX[AI]] - game.board[STORE_IDX[USER]]
+            score += (board[STORE_IDX[AI]] - board[STORE_IDX[USER]]) * 100
         # draw
         # if game.board[STORE_IDX[USER]] == game.board[STORE_IDX[AI]]:
             # score += 50
         # user wins
-        if game.board[STORE_IDX[AI]] < game.board[STORE_IDX[USER]]:
-            score -= 1000
-            score -= game.board[STORE_IDX[USER]] - game.board[STORE_IDX[AI]]
+        if board[STORE_IDX[AI]] < board[STORE_IDX[USER]]:
+            score -= 10_000
+            score -= (board[STORE_IDX[USER]] - board[STORE_IDX[AI]]) * 100
         # if steal is possible
         for house in HOUSE_LIST[AI]:
             if board[house] >= 1:
-                score += board[P[house][OPP]] * 1000
+                score += (board[P[house][OPP]] * 1000)
         # don't let the user steal from AI
         for house in HOUSE_LIST[USER]:
             if board[house] < 1:
@@ -237,7 +237,7 @@ class KalahaGame(easyAI.TwoPlayersGame):
         for house in HOUSE_LIST[AI]:
             ai += board[house]
         print(f"i alt: {user + ai}")
-        if (user + ai) < 20:
+        if (user + ai) < 15:
             if user > ai:
                 score -= (user - ai) * 1000
 
@@ -358,7 +358,7 @@ if __name__ == "__main__":
     # game = KalahaGame([human, other_human])
     game = KalahaGame([human, m_ai])
 
-    SEARCH_DEPTH = 4
+    SEARCH_DEPTH = 6
     round = 0
     while not game.is_over():
         round += 1
