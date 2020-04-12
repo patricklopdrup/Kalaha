@@ -79,8 +79,9 @@ class KalahaGame(easyAI.TwoPlayersGame):
         self.reset_board()
 
         # self.board = [0,
-        #7, 0, 0, 1, 0, 1, 0,
-        # 0, 6, 1, 0, 1, 0, 0]
+        #               0, 0, 2, 0, 0, 1, 0,
+        #               0, 4, 1, 0, 4, 0, 0]
+
         #     13  12  11  10  09  08        AI
         # 14                          07
         #     01  02  03  04  05  06        USER
@@ -211,23 +212,18 @@ class KalahaGame(easyAI.TwoPlayersGame):
         score = 0
         # AI wins
         if board[STORE_IDX[AI]] > board[STORE_IDX[USER]]:
+            print(
+                f"ai vinder: {board[STORE_IDX[AI]]} - {board[STORE_IDX[USER]]}")
             score += 10_000
             score += (board[STORE_IDX[AI]] - board[STORE_IDX[USER]]) * 100
-        # draw
-        # if game.board[STORE_IDX[USER]] == game.board[STORE_IDX[AI]]:
-            # score += 50
         # user wins
         if board[STORE_IDX[AI]] < board[STORE_IDX[USER]]:
             score -= 10_000
             score -= (board[STORE_IDX[USER]] - board[STORE_IDX[AI]]) * 100
-        # if steal is possible
-        for house in HOUSE_LIST[AI]:
-            if board[house] >= 1:
-                score += (board[P[house][OPP]] * 1000)
         # don't let the user steal from AI
         for house in HOUSE_LIST[USER]:
             if board[house] < 1:
-                score += (board[P[house][OPP]] * 1000)
+                score -= (board[P[house][OPP]] * 1000)
 
         # if there is more stones on the user side we give minus point to AI
         user = 0
@@ -236,8 +232,8 @@ class KalahaGame(easyAI.TwoPlayersGame):
             user += board[house]
         for house in HOUSE_LIST[AI]:
             ai += board[house]
-        print(f"i alt: {user + ai}")
-        if (user + ai) < 15:
+        print(f"i alt:{user}+{ai} = {user + ai}")
+        if (user + ai) < 20:
             if user > ai:
                 score -= (user - ai) * 1000
 
@@ -257,7 +253,7 @@ class KalahaGame(easyAI.TwoPlayersGame):
         legal_moves = self.possible_moves()
         print(f"moves: {legal_moves}")
         for move in legal_moves:
-            print(f"igang med move {move}")
+            #print(f"igang med move {move}")
             if ply == 0:
                 print("her")
                 return self.eval(self.board)
@@ -293,7 +289,7 @@ class KalahaGame(easyAI.TwoPlayersGame):
         score = -float('inf')
 
         legal_moves = self.possible_moves()
-        print(f"max move: {legal_moves}")
+        #print(f"max move: {legal_moves}")
         for m in legal_moves:
             if ply == 0:
                 print("return fra ply max")
@@ -321,7 +317,7 @@ class KalahaGame(easyAI.TwoPlayersGame):
 
         score = float('inf')
         legal_moves = self.possible_moves()
-        print(f"min move: {legal_moves}")
+        #print(f"min move: {legal_moves}")
         for m in legal_moves:
             # print(f"min move {m} af {legal_moves}")
             if ply == 0:
@@ -358,7 +354,7 @@ if __name__ == "__main__":
     # game = KalahaGame([human, other_human])
     game = KalahaGame([human, m_ai])
 
-    SEARCH_DEPTH = 6
+    SEARCH_DEPTH = 4
     round = 0
     while not game.is_over():
         round += 1
