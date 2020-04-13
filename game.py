@@ -161,11 +161,7 @@ class KalahaGame(easyAI.TwoPlayersGame):
                 self.board[house] = self.seeds_per_house
 
     def undo_move(self):
-        #print(f"board før")
-        # print(self.board)
         self.board = copy.deepcopy(self.old_board)
-        #print(f"board efter")
-        # print(self.board)
 
     def save_board(self):
         self.old_board = copy.deepcopy(self.board)
@@ -188,7 +184,7 @@ class KalahaGame(easyAI.TwoPlayersGame):
         self.board[pit] += self.board[HAND]
         self.board[HAND] = 0
 
-    # returning the biggest house with most stones
+    # returning the house with most stones
     def ai_move(self):
         move = 0
         for house in HOUSE_LIST[AI]:

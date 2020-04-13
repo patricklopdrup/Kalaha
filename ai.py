@@ -6,8 +6,6 @@ def eval(board):
     score = 0
     # AI wins
     if board[game.STORE_IDX[game.AI]] > board[game.STORE_IDX[game.USER]]:
-        # print(
-        # f"ai vinder: {board[game.STORE_IDX[game.AI]]} - {board[game.STORE_IDX[game.USER]]}")
         score += 10_000
         score += (board[game.STORE_IDX[game.AI]] -
                   board[game.STORE_IDX[game.USER]]) * 100
@@ -76,9 +74,8 @@ def alpha_beta_search(ply):
     print(f"bestscore {best_score} at move {m_move}")
     return m_move
 
+
 # For the maximizing player (AI). This is done in the "mind" of the AI.
-
-
 def max_value(ply, alpha, beta):
     if kalaha.is_over():
         return eval(kalaha.board)
@@ -93,9 +90,10 @@ def max_value(ply, alpha, beta):
 
         # save board before making move
         kalaha.save_board()
+        kalaha.make_move(m)
         # switch to minimizing player
         kalaha.switch_player()
-        kalaha.make_move(m)
+
         score = max(score, min_value(ply-1, alpha, beta))
         kalaha.undo_move()
 
@@ -123,9 +121,10 @@ def min_value(ply, alpha, beta):
 
         # save board before making move
         kalaha.save_board()
+        kalaha.make_move(m)
         # switch to maximizing player
         kalaha.switch_player()
-        kalaha.make_move(m)
+
         score = min(score, max_value(ply-1, alpha, beta))
         kalaha.undo_move()
 
@@ -152,7 +151,7 @@ def winner(board):
 if __name__ == "__main__":
 
     # The search depth. Even number makes most sense, because it is plys (halv-moves)
-    SEARCH_DEPTH = 6
+    SEARCH_DEPTH = 10
     round = 0
     while not kalaha.is_over():
         round += 1
