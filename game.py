@@ -56,15 +56,7 @@ P = {
 ALL_PITS = range(1, 15)
 
 
-class Hej():
-    pass
-
-
 class KalahaHumanPlayer(easyAI.Human_Player):
-    pass
-
-
-class KalahaAIPlayer(easyAI.AI_Player):
     pass
 
 
@@ -78,6 +70,7 @@ class KalahaGame(easyAI.TwoPlayersGame):
         self.seeds_per_house = 4
         self.reset_board()
 
+        # For debug
         # self.board = [0,
         #               0, 0, 2, 0, 0, 1, 0,
         #               0, 4, 1, 0, 4, 0, 0]
@@ -98,6 +91,7 @@ class KalahaGame(easyAI.TwoPlayersGame):
         for house in HOUSE_LIST[self.nplayer]:
             if self.board[house] != 0:
                 possible.append(house)
+        #print(f"hej moves: {possible}")
         return possible
 
     def make_move(self, house):
@@ -167,10 +161,10 @@ class KalahaGame(easyAI.TwoPlayersGame):
                 self.board[house] = self.seeds_per_house
 
     def undo_move(self):
-        # print(f"board før")
+        #print(f"board før")
         # print(self.board)
         self.board = copy.deepcopy(self.old_board)
-        # print(f"board efter")
+        #print(f"board efter")
         # print(self.board)
 
     def save_board(self):
@@ -207,168 +201,3 @@ class KalahaGame(easyAI.TwoPlayersGame):
         for seed in ALL_PITS:
             count += self.board[seed]
         return count
-
-    def eval(self, board):
-        score = 0
-        # AI wins
-        if board[STORE_IDX[AI]] > board[STORE_IDX[USER]]:
-            print(
-                f"ai vinder: {board[STORE_IDX[AI]]} - {board[STORE_IDX[USER]]}")
-            score += 10_000
-            score += (board[STORE_IDX[AI]] - board[STORE_IDX[USER]]) * 100
-        # user wins
-        if board[STORE_IDX[AI]] < board[STORE_IDX[USER]]:
-            score -= 10_000
-            score -= (board[STORE_IDX[USER]] - board[STORE_IDX[AI]]) * 100
-        # don't let the user steal from AI
-        for house in HOUSE_LIST[USER]:
-            if board[house] < 1:
-                score -= (board[P[house][OPP]] * 1000)
-
-        # if there is more stones on the user side we give minus point to AI
-        user = 0
-        ai = 0
-        for house in HOUSE_LIST[USER]:
-            user += board[house]
-        for house in HOUSE_LIST[AI]:
-            ai += board[house]
-        print(f"i alt:{user}+{ai} = {user + ai}")
-        if (user + ai) < 20:
-            if user > ai:
-                score -= (user - ai) * 1000
-
-        return score
-
-    count = 0
-
-    def alpha_beta_search(self, ply):
-        self.count = 0
-        m_move = -1
-        alpha = -float('inf')
-        beta = float('inf')
-        best_score = -float('inf')
-
-        self.copy_board()
-
-        legal_moves = self.possible_moves()
-        print(f"moves: {legal_moves}")
-        for move in legal_moves:
-            #print(f"igang med move {move}")
-            if ply == 0:
-                print("her")
-                return self.eval(self.board)
-
-            self.copy_board()
-            self.save_board()
-            self.make_move(move)
-            self.switch_player()
-            s = self.min_value(ply-1, alpha, beta)
-            self.undo_move()
-            self.paste_board()
-
-            print(f"s= {s} for {move}")
-            if s > best_score:
-                m_move = move
-                best_score = s
-                print(f"bestscore {best_score} at move {m_move}")
-
-            alpha = max(best_score, alpha)
-        self.paste_board()
-        self.nplayer = AI
-        print(f"best move {m_move} med {best_score}")
-        print(f"total seeds {self.count_total_seeds()}")
-        print(f"count: {self.count}")
-        return m_move
-
-    def max_value(self, ply, alpha, beta):
-        self.count += 1
-        if self.is_over():
-            print("return over max")
-            return self.eval(self.board)
-
-        score = -float('inf')
-
-        legal_moves = self.possible_moves()
-        #print(f"max move: {legal_moves}")
-        for m in legal_moves:
-            if ply == 0:
-                print("return fra ply max")
-                return self.eval(self.board)
-
-            self.save_board()
-            self.switch_player()
-
-            self.make_move(m)
-            score = max(score, self.min_value(ply-1, alpha, beta))
-            self.undo_move()
-
-            if score >= beta:
-                return score
-
-            alpha = max(alpha, score)
-
-        return score
-
-    def min_value(self, ply, alpha, beta):
-        self.count += 1
-        if self.is_over():
-            print("return over max")
-            return self.eval(self.board)
-
-        score = float('inf')
-        legal_moves = self.possible_moves()
-        #print(f"min move: {legal_moves}")
-        for m in legal_moves:
-            # print(f"min move {m} af {legal_moves}")
-            if ply == 0:
-                print("return fra ply min")
-                return self.eval(self.board)
-
-            self.save_board()
-            self.switch_player()
-            self.make_move(m)
-            score = min(score, self.max_value(ply-1, alpha, beta))
-            self.undo_move()
-
-            if score <= alpha:
-                return score
-
-            beta = min(beta, score)
-
-        return score
-
-
-def winner():
-    if game.board[STORE_IDX[USER]] > game.board[STORE_IDX[AI]]:
-        return "You win!"
-    elif game.board[STORE_IDX[USER]] == game.board[STORE_IDX[AI]]:
-        return "It's a draw!"
-    else:
-        return "You lose!"
-
-
-if __name__ == "__main__":
-    human = KalahaHumanPlayer()
-    # other_human = KalahaHumanPlayer()
-    m_ai = KalahaHumanPlayer()
-    # game = KalahaGame([human, other_human])
-    game = KalahaGame([human, m_ai])
-
-    SEARCH_DEPTH = 4
-    round = 0
-    while not game.is_over():
-        round += 1
-        game.show()
-        print(f"round: {round}")
-        if game.nplayer == USER:
-            move = int(input("Enter move:"))
-            while move not in HOUSE_LIST[USER]:
-                move = int(input("Enter legal move:"))
-        else:
-            # move = game.ai_move()
-            move = game.alpha_beta_search(SEARCH_DEPTH)
-            print(f"\nAI moves: {move}\n")
-        game.play_move(move)
-    # when game is over
-    game.show()
-    print(winner())

@@ -1,3 +1,2 @@
-self.board = [0,
-        #               0, 0, 2, 0, 0, 1, 0,
-        #               0, 4, 1, 0, 4, 0, 0]
+
+            while move not in m_game.HOUSE_LIST[m_game.US
